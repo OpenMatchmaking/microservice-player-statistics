@@ -38,6 +38,15 @@ class PlayerStatistic(Document):
             error='Field value cannot be represented by a negative integer value.'
         )
     )
+    rating = IntegerField(
+        allow_none=False,
+        required=False,
+        default=0,
+        validate=validate.Range(
+            min=0,
+            error='Field value cannot be represented by a negative integer value.'
+        )
+    )
 
     class Meta:
         strict = False
