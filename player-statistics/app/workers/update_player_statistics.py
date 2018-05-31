@@ -80,7 +80,7 @@ class UpdatePlayerStatisticsWorker(AmqpWorker):
         channel = await protocol.channel()
         await channel.exchange_declare(
             queue_name=self.REQUEST_EXCHANGE_NAME,
-            type_name="fanout",
+            type_name="direct",
             durable=True,
             passive=False,
             auto_delete=False
