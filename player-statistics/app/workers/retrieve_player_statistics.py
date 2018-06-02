@@ -9,7 +9,7 @@ from sage_utils.wrappers import Response
 
 class RetrievePlayerStatisticsWorker(AmqpWorker):
     QUEUE_NAME = 'player-stats.statistic.retrieve'
-    REQUEST_EXCHANGE_NAME = 'open-matchmaking.player-stats.statistic.retrieve'
+    REQUEST_EXCHANGE_NAME = 'open-matchmaking.player-stats.statistic.retrieve.direct'
     RESPONSE_EXCHANGE_NAME = 'open-matchmaking.responses.direct'
     CONTENT_TYPE = 'application/json'
 

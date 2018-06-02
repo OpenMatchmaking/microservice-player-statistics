@@ -9,7 +9,7 @@ from sage_utils.wrappers import Response
 
 class UpdatePlayerStatisticsWorker(AmqpWorker):
     QUEUE_NAME = 'player-stats.statistic.update'
-    REQUEST_EXCHANGE_NAME = 'open-matchmaking.player-stats.statistic.update'
+    REQUEST_EXCHANGE_NAME = 'open-matchmaking.player-stats.statistic.update.direct'
     RESPONSE_EXCHANGE_NAME = 'open-matchmaking.responses.direct'
     CONTENT_TYPE = 'application/json'
 

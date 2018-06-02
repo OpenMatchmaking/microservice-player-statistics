@@ -10,7 +10,7 @@ from sage_utils.wrappers import Response
 
 class InitPlayerStatisticsWorker(AmqpWorker):
     QUEUE_NAME = 'player-stats.statistic.init'
-    REQUEST_EXCHANGE_NAME = 'open-matchmaking.player-stats.statistic.init'
+    REQUEST_EXCHANGE_NAME = 'open-matchmaking.player-stats.statistic.init.direct'
     RESPONSE_EXCHANGE_NAME = 'open-matchmaking.responses.direct'
     CONTENT_TYPE = 'application/json'
 
@@ -77,13 +77,6 @@ class InitPlayerStatisticsWorker(AmqpWorker):
             return
 
         channel = await protocol.channel()
-        await channel.exchange_declare(
-            queue_name=self.REQUEST_EXCHANGE_NAME,
-            type_name="direct",
-            durable=True,
-            passive=False,
-            auto_delete=False
-        )
         await channel.queue_declare(
             queue_name=self.QUEUE_NAME,
             durable=True,
