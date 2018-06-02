@@ -1,6 +1,6 @@
 from marshmallow import validate
 from umongo import Document
-from umongo.fields import UUIDField, IntegerField
+from umongo.fields import ObjectIdField, IntegerField
 
 from app import app
 
@@ -10,7 +10,7 @@ instance = app.config["LAZY_UMONGO"]
 
 @instance.register
 class PlayerStatistic(Document):
-    player_id = UUIDField(allow_none=False, required=True, unique=True)
+    player_id = ObjectIdField(allow_none=False, required=True, unique=True)
     total_games = IntegerField(
         allow_none=False,
         required=False,

@@ -1,4 +1,3 @@
-from bson import ObjectId
 from marshmallow import Schema, fields, validates, ValidationError
 
 from app import app
@@ -8,20 +7,10 @@ PlayerStatistic = app.config["LAZY_UMONGO"].PlayerStatistic
 
 
 class InitPlayerStatisticSchema(PlayerStatistic.schema.as_marshmallow_schema()):
-    id = fields.String(required=False, allow_none=False)
-
-    @validates('id')
-    def validate_id(self, value):
-        if not ObjectId.is_valid(value):
-            raise ValidationError(
-                "'{}' is not a valid ObjectId, it must be a 12-byte "
-                "input or a 24-character hex string.".format(value)
-            )
 
     class Meta:
         model = PlayerStatistic
         fields = (
-            'id',
             'player_id',
         )
 
