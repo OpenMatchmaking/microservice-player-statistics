@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, validates, ValidationError
+from marshmallow import Schema, fields, validates, ValidationError, post_load
 
 from app import app
 
@@ -24,8 +24,12 @@ class RetrievePlayerStatisticSchema(PlayerStatistic.schema.as_marshmallow_schema
         )
 
 
-class UpdatePlayerStatisticSchema(PlayerStatistic.schema.as_marshmallow_schema()):
+class UpdatePlayerStatisticSchema(PlayerStatistic.schema.as_marshmallow_schema(check_unknown_fields=False)):
     IS_DECREASED_ERROR_TEMPLATE = "The passed value='{}' must be greater or equal to the current."
+
+    def __init__(self, instance, *args, **kwargs):
+        super(UpdatePlayerStatisticSchema, self).__init__(*args, **kwargs)
+        self.instance = instance
 
     def validate_for_increased_value(self, old_value, new_value):
         if new_value < old_value:
@@ -33,15 +37,24 @@ class UpdatePlayerStatisticSchema(PlayerStatistic.schema.as_marshmallow_schema()
 
     @validates('total_games')
     def validate_total_games_is_increased(self, value):
-        self.validate_for_increased_value(self.total_games, value)
+        self.validate_for_increased_value(self.instance.total_games, value)
 
     @validates('wins')
     def validate_wins_is_increased(self, value):
-        self.validate_for_increased_value(self.wins, value)
+        self.validate_for_increased_value(self.instance.wins, value)
 
     @validates('loses')
     def validate_loses_is_increased(self, value):
-        self.validate_for_increased_value(self.loses, value)
+        self.validate_for_increased_value(self.instance.loses, value)
+
+    def load(self, data, *args, **kwargs):
+        result = super(UpdatePlayerStatisticSchema, self).load(data, *args, **kwargs)
+        result.data.update({
+            key: value
+            for key, value in data.items()
+            if key not in list(self._declared_fields.keys())
+        })
+        return result
 
     class Meta:
         model = PlayerStatistic
