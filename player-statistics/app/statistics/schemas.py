@@ -47,14 +47,5 @@ class UpdatePlayerStatisticSchema(PlayerStatistic.schema.as_marshmallow_schema(c
     def validate_loses_is_increased(self, value):
         self.validate_for_increased_value(self.instance.loses, value)
 
-    def load(self, data, *args, **kwargs):
-        result = super(UpdatePlayerStatisticSchema, self).load(data, *args, **kwargs)
-        result.data.update({
-            key: value
-            for key, value in data.items()
-            if key not in list(self._declared_fields.keys())
-        })
-        return result
-
     class Meta:
         model = PlayerStatistic
