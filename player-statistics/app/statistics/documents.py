@@ -47,6 +47,3 @@ class PlayerStatistic(Document):
             error='Field value cannot be represented by a negative integer value.'
         )
     )
-
-    class Meta:
-        strict = False
