@@ -1,5 +1,4 @@
-from bson import ObjectId
-from marshmallow import Schema, fields, validates, ValidationError
+from marshmallow import Schema, fields, validates, ValidationError, post_load
 
 from app import app
 
@@ -8,20 +7,10 @@ PlayerStatistic = app.config["LAZY_UMONGO"].PlayerStatistic
 
 
 class InitPlayerStatisticSchema(PlayerStatistic.schema.as_marshmallow_schema()):
-    id = fields.String(required=False, allow_none=False)
-
-    @validates('id')
-    def validate_id(self, value):
-        if not ObjectId.is_valid(value):
-            raise ValidationError(
-                "'{}' is not a valid ObjectId, it must be a 12-byte "
-                "input or a 24-character hex string.".format(value)
-            )
 
     class Meta:
         model = PlayerStatistic
         fields = (
-            'id',
             'player_id',
         )
 
@@ -35,8 +24,12 @@ class RetrievePlayerStatisticSchema(PlayerStatistic.schema.as_marshmallow_schema
         )
 
 
-class UpdatePlayerStatisticSchema(PlayerStatistic.schema.as_marshmallow_schema()):
+class UpdatePlayerStatisticSchema(PlayerStatistic.schema.as_marshmallow_schema(check_unknown_fields=False)):
     IS_DECREASED_ERROR_TEMPLATE = "The passed value='{}' must be greater or equal to the current."
+
+    def __init__(self, instance, *args, **kwargs):
+        super(UpdatePlayerStatisticSchema, self).__init__(*args, **kwargs)
+        self.instance = instance
 
     def validate_for_increased_value(self, old_value, new_value):
         if new_value < old_value:
@@ -44,15 +37,15 @@ class UpdatePlayerStatisticSchema(PlayerStatistic.schema.as_marshmallow_schema()
 
     @validates('total_games')
     def validate_total_games_is_increased(self, value):
-        self.validate_for_increased_value(self.total_games, value)
+        self.validate_for_increased_value(self.instance.total_games, value)
 
     @validates('wins')
     def validate_wins_is_increased(self, value):
-        self.validate_for_increased_value(self.wins, value)
+        self.validate_for_increased_value(self.instance.wins, value)
 
     @validates('loses')
     def validate_loses_is_increased(self, value):
-        self.validate_for_increased_value(self.loses, value)
+        self.validate_for_increased_value(self.instance.loses, value)
 
     class Meta:
         model = PlayerStatistic

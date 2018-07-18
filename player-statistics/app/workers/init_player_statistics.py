@@ -3,6 +3,7 @@ import json
 from aioamqp import AmqpClosedConnection
 from bson import ObjectId
 from marshmallow import ValidationError
+from marshmallow.utils import missing
 from sanic_amqp_ext import AmqpWorker
 from sage_utils.constants import VALIDATION_ERROR
 from sage_utils.wrappers import Response
@@ -10,7 +11,7 @@ from sage_utils.wrappers import Response
 
 class InitPlayerStatisticsWorker(AmqpWorker):
     QUEUE_NAME = 'player-stats.statistic.init'
-    REQUEST_EXCHANGE_NAME = 'open-matchmaking.player-stats.statistic.init'
+    REQUEST_EXCHANGE_NAME = 'open-matchmaking.player-stats.statistic.init.direct'
     RESPONSE_EXCHANGE_NAME = 'open-matchmaking.responses.direct'
     CONTENT_TYPE = 'application/json'
 
@@ -40,9 +41,11 @@ class InitPlayerStatisticsWorker(AmqpWorker):
         except ValidationError as exc:
             return Response.from_error(VALIDATION_ERROR, exc.normalized_messages())
 
-        object_id = ObjectId(data['id']) if 'id' in data.keys() else ObjectId()
-        document = await self.player_statistic_document.collection.replace_one(
-            {'_id': object_id}, replacement=data, upsert=True
+        await self.player_statistic_document.collection.replace_one(
+            {'player_id': data['player_id']}, replacement=data, upsert=True
+        )
+        document = await self.player_statistic_document.find_one(
+            {'player_id': data['player_id']}
         )
 
         return Response.with_content(document.dump())
@@ -77,13 +80,6 @@ class InitPlayerStatisticsWorker(AmqpWorker):
             return
 
         channel = await protocol.channel()
-        await channel.exchange_declare(
-            queue_name=self.REQUEST_EXCHANGE_NAME,
-            type_name="direct",
-            durable=True,
-            passive=False,
-            auto_delete=False
-        )
         await channel.queue_declare(
             queue_name=self.QUEUE_NAME,
             durable=True,

@@ -3,15 +3,17 @@ import json
 from aioamqp import AmqpClosedConnection
 from marshmallow import ValidationError
 from sanic_amqp_ext import AmqpWorker
-from sage_utils.constants import VALIDATION_ERROR
+from sage_utils.constants import VALIDATION_ERROR, NOT_FOUND_ERROR
 from sage_utils.wrappers import Response
 
 
 class RetrievePlayerStatisticsWorker(AmqpWorker):
     QUEUE_NAME = 'player-stats.statistic.retrieve'
-    REQUEST_EXCHANGE_NAME = 'open-matchmaking.player-stats.statistic.retrieve'
+    REQUEST_EXCHANGE_NAME = 'open-matchmaking.player-stats.statistic.retrieve.direct'
     RESPONSE_EXCHANGE_NAME = 'open-matchmaking.responses.direct'
     CONTENT_TYPE = 'application/json'
+
+    PLAYER_NOT_FOUND_ERROR = "Player was not found or doesn't exist."
 
     def __init__(self, app, *args, **kwargs):
         super(RetrievePlayerStatisticsWorker, self).__init__(app, *args, **kwargs)
@@ -39,10 +41,12 @@ class RetrievePlayerStatisticsWorker(AmqpWorker):
         except ValidationError as exc:
             return Response.from_error(VALIDATION_ERROR, exc.normalized_messages())
 
-        document = await self.player_statistic_document.collection.find_one(
+        document = await self.player_statistic_document.find_one(
             {'player_id': data['player_id']}
         )
 
+        if document is None:
+            return Response.from_error(NOT_FOUND_ERROR, self.PLAYER_NOT_FOUND_ERROR)
         return Response.with_content(document.dump())
 
     async def process_request(self, channel, body, envelope, properties):
@@ -75,13 +79,6 @@ class RetrievePlayerStatisticsWorker(AmqpWorker):
             return
 
         channel = await protocol.channel()
-        await channel.exchange_declare(
-            queue_name=self.REQUEST_EXCHANGE_NAME,
-            type_name="direct",
-            durable=True,
-            passive=False,
-            auto_delete=False
-        )
         await channel.queue_declare(
             queue_name=self.QUEUE_NAME,
             durable=True,
