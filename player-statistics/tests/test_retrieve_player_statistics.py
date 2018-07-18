@@ -29,7 +29,7 @@ async def test_worker_returns_a_player_statistics(sanic_server):
     object = PlayerStatistic(**create_data)
     await object.commit()
 
-    players_count = await PlayerStatistic.collection.find().count()
+    players_count = await PlayerStatistic.collection.count_documents({})
     assert players_count == 1
 
     retrieve_data = {'player_id': player_id}

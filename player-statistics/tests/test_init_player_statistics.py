@@ -41,7 +41,7 @@ async def test_worker_returns_a_new_initialized_player(sanic_server):
     assert content['loses'] == 0
     assert content['rating'] == 0
 
-    players_count = await PlayerStatistic.collection.find().count()
+    players_count = await PlayerStatistic.collection.count_documents({})
     assert players_count == 1
 
     await PlayerStatistic.collection.delete_many({})
@@ -64,7 +64,7 @@ async def test_worker_returns_an_reinitialized_player(sanic_server):
     object = PlayerStatistic(**create_data)
     await object.commit()
 
-    players_count = await PlayerStatistic.collection.find().count()
+    players_count = await PlayerStatistic.collection.count_documents({})
     assert players_count == 1
 
     init_data = {'player_id': player_id}
@@ -99,7 +99,7 @@ async def test_worker_returns_an_reinitialized_player(sanic_server):
     assert content['rating'] != create_data['rating']
     assert content['rating'] == 0
 
-    players_count = await PlayerStatistic.collection.find().count()
+    players_count = await PlayerStatistic.collection.count_documents({})
     assert players_count == 1
 
     await PlayerStatistic.collection.delete_many({})
@@ -132,7 +132,7 @@ async def test_worker_returns_validation_for_non_specified_fields(sanic_server):
     assert error[Response.ERROR_DETAILS_FIELD_NAME]['player_id'][0] == 'Missing data for ' \
                                                                        'required field.'
 
-    players_count = await PlayerStatistic.collection.find().count()
+    players_count = await PlayerStatistic.collection.count_documents({})
     assert players_count == 0
 
     await PlayerStatistic.collection.delete_many({})
@@ -164,7 +164,7 @@ async def test_worker_returns_validation_for_invalid_player_id(sanic_server):
     assert len(error[Response.ERROR_DETAILS_FIELD_NAME]['player_id']) == 1
     assert error[Response.ERROR_DETAILS_FIELD_NAME]['player_id'][0] == 'Invalid ObjectId.'
 
-    players_count = await PlayerStatistic.collection.find().count()
+    players_count = await PlayerStatistic.collection.count_documents({})
     assert players_count == 0
 
     await PlayerStatistic.collection.delete_many({})

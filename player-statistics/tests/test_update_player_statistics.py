@@ -31,7 +31,7 @@ async def test_worker_returns_updated_player_statistics(sanic_server):
     object = PlayerStatistic(**create_data)
     await object.commit()
 
-    players_count = await PlayerStatistic.collection.find().count()
+    players_count = await PlayerStatistic.collection.count_documents({})
     assert players_count == 1
 
     update_data = deepcopy(create_data)
@@ -67,7 +67,7 @@ async def test_worker_returns_updated_player_statistics(sanic_server):
 
 
 @pytest.mark.asyncio
-async def test_worker_returns_updated_player_statistics_with_extra_fields(sanic_server):
+async def test_worker_returns_an_error_for_extra_fields_by_default(sanic_server):
     await PlayerStatistic.collection.delete_many({})
 
     player_id = str(ObjectId())
@@ -81,7 +81,7 @@ async def test_worker_returns_updated_player_statistics_with_extra_fields(sanic_
     object = PlayerStatistic(**create_data)
     await object.commit()
 
-    players_count = await PlayerStatistic.collection.find().count()
+    players_count = await PlayerStatistic.collection.count_documents({})
     assert players_count == 1
 
     update_data = deepcopy(create_data)
@@ -103,24 +103,13 @@ async def test_worker_returns_updated_player_statistics_with_extra_fields(sanic_
     response = await client.send(payload=update_data)
 
     assert Response.EVENT_FIELD_NAME in response.keys()
-    assert Response.CONTENT_FIELD_NAME in response.keys()
-    content = response[Response.CONTENT_FIELD_NAME]
+    assert Response.ERROR_FIELD_NAME in response.keys()
+    error = response[Response.ERROR_FIELD_NAME]
 
-    assert len(list(content.keys())) == 6
-    assert set(content.keys()) == {
-        'id', 'player_id', 'total_games',
-        'wins', 'loses', 'rating',
-        'winrate', 'nickname'
-    }
+    assert len(list(error.keys())) == 2
+    assert set(error.keys()) == {'type', 'details'}
 
-    assert content['player_id'] == update_data['player_id']
-    assert content['total_games'] == update_data['total_games']
-    assert content['wins'] == update_data['wins']
-    assert content['loses'] == update_data['loses']
-    assert content['rating'] == update_data['rating']
-
-    assert content['winrate'] == update_data['winrate']
-    assert content['nickname'] == update_data['nickname']
+    assert error['type'] == VALIDATION_ERROR
 
     await PlayerStatistic.collection.delete_many({})
 
@@ -140,7 +129,7 @@ async def test_worker_returns_no_changed_player_statistics(sanic_server):
     object = PlayerStatistic(**create_data)
     await object.commit()
 
-    players_count = await PlayerStatistic.collection.find().count()
+    players_count = await PlayerStatistic.collection.count_documents({})
     assert players_count == 1
 
     update_data = deepcopy(create_data)
