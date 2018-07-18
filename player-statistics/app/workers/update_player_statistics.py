@@ -40,12 +40,12 @@ class UpdatePlayerStatisticsWorker(AmqpWorker):
         try:
             document, data = await self.validate_data(raw_data)
             document.update(data)
+            await document.commit()
         except ValidationError as exc:
             return Response.from_error(VALIDATION_ERROR, exc.normalized_messages())
         except ValueError:
             return Response.from_error(NOT_FOUND_ERROR, self.PLAYER_NOT_FOUND_ERROR)
 
-        await document.reload()
         return Response.with_content(document.dump())
 
     async def process_request(self, channel, body, envelope, properties):
