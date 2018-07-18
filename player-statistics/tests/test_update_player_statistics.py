@@ -111,6 +111,13 @@ async def test_worker_returns_an_error_for_extra_fields_by_default(sanic_server)
 
     assert error['type'] == VALIDATION_ERROR
 
+    assert len(error['details']) == 1
+    assert len(error['details']['_schema']) == 2
+    assert set(error['details']['_schema']) == {
+        'Unknown field name nickname.',
+        'Unknown field name winrate.'
+    }
+
     await PlayerStatistic.collection.delete_many({})
 
 
