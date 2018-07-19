@@ -24,7 +24,7 @@ class RetrievePlayerStatisticSchema(PlayerStatistic.schema.as_marshmallow_schema
         )
 
 
-class UpdatePlayerStatisticSchema(PlayerStatistic.schema.as_marshmallow_schema(check_unknown_fields=False)):
+class UpdatePlayerStatisticSchema(PlayerStatistic.schema.as_marshmallow_schema()):
     IS_DECREASED_ERROR_TEMPLATE = "The passed value='{}' must be greater or equal to the current."
 
     def __init__(self, instance, *args, **kwargs):
@@ -48,4 +48,5 @@ class UpdatePlayerStatisticSchema(PlayerStatistic.schema.as_marshmallow_schema(c
         self.validate_for_increased_value(self.instance.loses, value)
 
     class Meta:
+        strict = True
         model = PlayerStatistic

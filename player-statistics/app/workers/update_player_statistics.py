@@ -34,12 +34,17 @@ class UpdatePlayerStatisticsWorker(AmqpWorker):
         if document is None:
             raise ValueError()
 
-        return document, data
+        deserializer = self.schema(instance=document)
+        result = deserializer.load(data)
+        if result.errors:
+            raise ValidationError(result.errors)
+
+        return document, result.data
 
     async def update_player_statistic(self, raw_data):
         try:
             document, data = await self.validate_data(raw_data)
-            document.update(data)
+            document._data._data.update(data)
             await document.commit()
         except ValidationError as exc:
             return Response.from_error(VALIDATION_ERROR, exc.normalized_messages())
