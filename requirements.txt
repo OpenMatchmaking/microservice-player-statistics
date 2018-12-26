@@ -1,6 +1,6 @@
 sanic==0.8.3
 sanic-script==0.3
-sanic-mongodb-extension==0.2.0
+sanic-mongodb-extension==0.2.1
 sanic-amqp-extension==0.1.1
 
 aioamqp==0.11.0
